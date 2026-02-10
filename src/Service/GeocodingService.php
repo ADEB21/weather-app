@@ -6,6 +6,10 @@ use Symfony\Contracts\HttpClient\HttpClientInterface;
 
 class GeocodingService
 {
+    private const API_URL = 'https://geocoding-api.open-meteo.com/v1/search';
+    private const MAX_RESULTS = 10;
+    private const LANGUAGE = 'fr';
+
     public function __construct(
         private readonly HttpClientInterface $client
     ) {}
@@ -15,15 +19,11 @@ class GeocodingService
      */
     public function searchCity(string $query): array
     {
-        if (empty(trim($query))) {
-            return [];
-        }
-
-        $response = $this->client->request('GET', 'https://geocoding-api.open-meteo.com/v1/search', [
+        $response = $this->client->request('GET', self::API_URL, [
             'query' => [
                 'name' => $query,
-                'count' => 10,
-                'language' => 'fr',
+                'count' => self::MAX_RESULTS,
+                'language' => self::LANGUAGE,
                 'format' => 'json',
             ]
         ]);

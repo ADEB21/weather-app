@@ -50,33 +50,8 @@ const loadFavorites = async () => {
   }
 };
 
-const handleAddFavorite = async (cityData) => {
-  const exists = allLocations.value.some(
-    loc => loc.latitude === cityData.latitude && loc.longitude === cityData.longitude
-  );
-  
-  if (!exists) {
-    try {
-      const response = await fetch('/api/favorites', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          city: cityData.city,
-          country: cityData.country || null,
-          latitude: cityData.latitude,
-          longitude: cityData.longitude,
-        }),
-      });
-      
-      if (response.ok) {
-        await loadFavorites();
-      }
-    } catch (error) {
-      console.error('Erreur lors de l\'ajout du favori:', error);
-    }
-  }
+const handleAddFavorite = async () => {
+  await loadFavorites();
 };
 
 const handleRemoveFavorite = async (locationId) => {

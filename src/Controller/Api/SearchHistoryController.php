@@ -28,14 +28,7 @@ class SearchHistoryController extends AbstractController
             : $this->searchHistoryRepository->findRecentSearches($limit);
 
         return $this->json([
-            'data' => array_map(fn(SearchHistory $search) => [
-                'id' => $search->getId(),
-                'city' => $search->getCity(),
-                'country' => $search->getCountry(),
-                'latitude' => $search->getLatitude(),
-                'longitude' => $search->getLongitude(),
-                'searchedAt' => $search->getSearchedAt()->format('c'),
-            ], $searches)
+            'data' => array_map($this->serializeSearch(...), $searches)
         ]);
     }
 
@@ -59,15 +52,20 @@ class SearchHistoryController extends AbstractController
         $this->searchHistoryRepository->save($search, true);
 
         return $this->json([
-            'data' => [
-                'id' => $search->getId(),
-                'city' => $search->getCity(),
-                'country' => $search->getCountry(),
-                'latitude' => $search->getLatitude(),
-                'longitude' => $search->getLongitude(),
-                'searchedAt' => $search->getSearchedAt()->format('c'),
-            ]
+            'data' => $this->serializeSearch($search)
         ], Response::HTTP_CREATED);
+    }
+
+    private function serializeSearch(SearchHistory $search): array
+    {
+        return [
+            'id' => $search->getId(),
+            'city' => $search->getCity(),
+            'country' => $search->getCountry(),
+            'latitude' => $search->getLatitude(),
+            'longitude' => $search->getLongitude(),
+            'searchedAt' => $search->getSearchedAt()->format('c'),
+        ];
     }
 
     #[Route('/clear', name: 'clear', methods: ['DELETE'])]

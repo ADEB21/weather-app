@@ -24,14 +24,7 @@ class FavoriteController extends AbstractController
         $favorites = $this->favoriteRepository->findAllOrderedByDate();
 
         return $this->json([
-            'data' => array_map(fn(Favorite $favorite) => [
-                'id' => $favorite->getId(),
-                'city' => $favorite->getCity(),
-                'country' => $favorite->getCountry(),
-                'latitude' => $favorite->getLatitude(),
-                'longitude' => $favorite->getLongitude(),
-                'addedAt' => $favorite->getAddedAt()->format('c'),
-            ], $favorites)
+            'data' => array_map($this->serializeFavorite(...), $favorites)
         ]);
     }
 
@@ -54,14 +47,7 @@ class FavoriteController extends AbstractController
         if ($existing) {
             return $this->json([
                 'error' => 'This location is already in favorites',
-                'data' => [
-                    'id' => $existing->getId(),
-                    'city' => $existing->getCity(),
-                    'country' => $existing->getCountry(),
-                    'latitude' => $existing->getLatitude(),
-                    'longitude' => $existing->getLongitude(),
-                    'addedAt' => $existing->getAddedAt()->format('c'),
-                ]
+                'data' => $this->serializeFavorite($existing)
             ], Response::HTTP_CONFLICT);
         }
 
@@ -80,15 +66,20 @@ class FavoriteController extends AbstractController
         }
 
         return $this->json([
-            'data' => [
-                'id' => $favorite->getId(),
-                'city' => $favorite->getCity(),
-                'country' => $favorite->getCountry(),
-                'latitude' => $favorite->getLatitude(),
-                'longitude' => $favorite->getLongitude(),
-                'addedAt' => $favorite->getAddedAt()->format('c'),
-            ]
+            'data' => $this->serializeFavorite($favorite)
         ], Response::HTTP_CREATED);
+    }
+
+    private function serializeFavorite(Favorite $favorite): array
+    {
+        return [
+            'id' => $favorite->getId(),
+            'city' => $favorite->getCity(),
+            'country' => $favorite->getCountry(),
+            'latitude' => $favorite->getLatitude(),
+            'longitude' => $favorite->getLongitude(),
+            'addedAt' => $favorite->getAddedAt()->format('c'),
+        ];
     }
 
     #[Route('/check', name: 'check', methods: ['GET'])]
