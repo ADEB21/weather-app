@@ -4,11 +4,11 @@
 
 Application météo moderne développée avec Symfony 8.0 et Vue.js 3. Cette application permet aux utilisateurs de :
 
-- 🌤️ Consulter les prévisions météorologiques en temps réel
-- 📍 Rechercher la météo par localisation géographique
-- ⭐ Enregistrer des villes favorites
-- 📊 Visualiser l'historique des recherches
-- 🌡️ Afficher des données météo détaillées (température, humidité, vent, etc.)
+- Consulter les prévisions météorologiques en temps réel
+- Rechercher la météo par localisation géographique
+- Enregistrer des villes favorites
+- Visualiser l'historique des recherches
+- Afficher des données météo détaillées (température, humidité, vent, etc.)
 
 L'application utilise l'API Open-Meteo pour récupérer les données météorologiques et intègre un service de géocodage pour la recherche de localisation.
 
@@ -50,30 +50,14 @@ composer install
 npm install
 ```
 
-### 4. Configurer l'environnement
-
-Créez un fichier `.env.local` à la racine du projet et configurez vos variables d'environnement :
-
-```bash
-cp .env .env.local
-```
-
-Modifiez le fichier `.env.local` selon vos besoins :
-
-```env
-APP_ENV=dev
-APP_SECRET=votre_secret_unique_ici
-DATABASE_URL="sqlite:///%kernel.project_dir%/var/data.db"
-```
-
-### 5. Créer la base de données
+### 4. Créer la base de données
 
 ```bash
 php bin/console doctrine:database:create
 php bin/console doctrine:migrations:migrate
 ```
 
-### 6. Compiler les assets
+### 5. Compiler les assets
 
 Pour le développement :
 
@@ -93,7 +77,7 @@ Pour la production :
 npm run build
 ```
 
-### 7. Démarrer le serveur de développement
+### 6. Démarrer le serveur de développement
 
 ```bash
 symfony server:start
