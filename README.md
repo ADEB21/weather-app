@@ -53,7 +53,6 @@ npm install
 ### 4. Créer la base de données
 
 ```bash
-php bin/console doctrine:database:create
 php bin/console doctrine:migrations:migrate
 ```
 
@@ -69,12 +68,6 @@ Ou pour surveiller les changements :
 
 ```bash
 npm run watch
-```
-
-Pour la production :
-
-```bash
-npm run build
 ```
 
 ### 6. Démarrer le serveur de développement
