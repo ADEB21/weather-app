@@ -58,6 +58,9 @@ const isDragging = ref(false);
 const containerWidth = ref(0);
 
 const handleTouchStart = (e) => {
+  if (e.target.closest('button') || e.target.closest('.search-overlay')) {
+    return;
+  }
   startX.value = e.touches[0].clientX;
   isDragging.value = true;
 };
@@ -85,6 +88,9 @@ const handleTouchEnd = () => {
 };
 
 const handleMouseDown = (e) => {
+  if (e.target.closest('button') || e.target.closest('.search-overlay')) {
+    return;
+  }
   startX.value = e.clientX;
   isDragging.value = true;
 };

@@ -298,11 +298,14 @@ const toggleFavorite = async () => {
           longitude: locationToAdd.longitude,
         }),
       });
-      if (response.ok) {
+      
+      if (response.ok || response.status === 409) {
         const data = await response.json();
         isFavorite.value = true;
         favoriteId.value = data.data.id;
-        emit('addFavorite', locationToAdd);
+        if (response.ok) {
+          emit('addFavorite', locationToAdd);
+        }
       }
     }
   } catch (err) {
@@ -311,8 +314,12 @@ const toggleFavorite = async () => {
 };
 
 watch(() => props.isActive, (newVal) => {
-  if (newVal && !weather.value) {
-    fetchWeather();
+  if (newVal) {
+    currentLocation.value = null;
+    if (!weather.value) {
+      fetchWeather();
+    }
+    checkFavoriteStatus();
   }
 });
 

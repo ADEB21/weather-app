@@ -16,15 +16,6 @@ return [
         'path' => './assets/app.js',
         'entrypoint' => true,
     ],
-    '@hotwired/stimulus' => [
-        'version' => '3.2.2',
-    ],
-    '@symfony/stimulus-bundle' => [
-        'path' => './vendor/symfony/stimulus-bundle/assets/dist/loader.js',
-    ],
-    '@hotwired/turbo' => [
-        'version' => '7.3.0',
-    ],
     'vue' => [
         'version' => '3.5.28',
         'package_specifier' => 'vue/dist/vue.esm-bundler.js',
@@ -46,8 +37,5 @@ return [
     ],
     '@vue/reactivity' => [
         'version' => '3.5.28',
-    ],
-    '@symfony/ux-vue' => [
-        'path' => './vendor/symfony/ux-vue/assets/dist/loader.js',
     ],
 ];
