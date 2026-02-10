@@ -180,28 +180,31 @@ onMounted(() => {
 .search-container {
   width: 100%;
   max-width: 600px;
-  margin: 0 auto 2rem;
+  margin: 0 auto;
   position: relative;
 }
 
 .search-box {
   position: relative;
+  margin: 0px 16px;
 }
 
 .search-input {
   width: 100%;
   padding: 1rem 1.5rem;
   font-size: 1.1rem;
-  border: 2px solid #e0e0e0;
-  border-radius: 50px;
+  border: none;
+  border-radius: 12px;
   outline: none;
   transition: all 0.3s;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(10px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
 }
 
 .search-input:focus {
-  border-color: #667eea;
-  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.2);
+  background: white;
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.2);
 }
 
 .dropdown {
@@ -209,9 +212,10 @@ onMounted(() => {
   top: calc(100% + 0.5rem);
   left: 0;
   right: 0;
-  background: white;
+  background: rgba(255, 255, 255, 0.98);
+  backdrop-filter: blur(20px);
   border-radius: 12px;
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2);
   max-height: 400px;
   overflow-y: auto;
   z-index: 1000;
@@ -238,6 +242,7 @@ onMounted(() => {
   color: #7f8c8d;
   text-transform: uppercase;
   letter-spacing: 0.5px;
+  padding: 0.5rem 1rem;
 }
 
 .clear-btn {
@@ -301,6 +306,10 @@ onMounted(() => {
   
   .dropdown {
     max-height: 300px;
+  }
+  
+  .search-container {
+    margin: 0;
   }
 }
 </style>

@@ -1,13 +1,8 @@
 <template>
-  <div class="weather-container">
-    <div class="header">
-      <h1>Météo</h1>
-      <SearchBar @citySelected="onCitySelected" />
-    </div>
-
+  <div class="weather-container" :class="backgroundClass">
     <div v-if="loading" class="loading">
       <div class="spinner"></div>
-      <p>Chargement des données météo...</p>
+      <p>Chargement...</p>
     </div>
 
     <div v-else-if="error" class="error">
@@ -15,82 +10,49 @@
     </div>
 
     <div v-else-if="weather" class="weather-content">
-      <div class="location-info">
-        <div class="location-header">
-          <h2>{{ currentCity }}</h2>
-          <button @click="toggleFavorite" class="favorite-btn" :class="{ active: isFavorite }">
-            {{ isFavorite ? '★' : '☆' }} {{ isFavorite ? 'Retirer des favoris' : 'Ajouter aux favoris' }}
-          </button>
+      <div class="top-bar">
+        <div class="location" @click="showSearchModal = true">
+          <span class="location-icon">📍</span>
+          <span class="location-name">{{ currentCity }}</span>
+          <span class="dropdown-icon">▼</span>
         </div>
-        <p class="update-time">Dernière mise à jour : {{ updateTime }}</p>
+        <button @click="showSearchModal = true" class="search-btn">
+          🔍
+        </button>
       </div>
 
-      <div class="current-weather">
-        <h2>Météo actuelle</h2>
-        <div class="current-grid">
-          <div class="weather-card">
-            <div class="icon">🌡️</div>
-            <div class="label">Température</div>
-            <div class="value">{{ weather.current.temperature_2m }}°C</div>
-          </div>
-          <div class="weather-card">
-            <div class="icon">🤔</div>
-            <div class="label">Ressenti</div>
-            <div class="value">{{ weather.current.apparent_temperature }}°C</div>
-          </div>
-          <div class="weather-card">
-            <div class="icon">💧</div>
-            <div class="label">Humidité</div>
-            <div class="value">{{ weather.current.relative_humidity_2m }}%</div>
-          </div>
-          <div class="weather-card">
-            <div class="icon">🌧️</div>
-            <div class="label">Précipitations</div>
-            <div class="value">{{ weather.current.precipitation }} mm</div>
-          </div>
-          <div class="weather-card">
-            <div class="icon">💨</div>
-            <div class="label">Vent</div>
-            <div class="value">{{ weather.current.wind_speed_10m }} km/h</div>
-            <div class="sub-value">{{ getWindDirection(weather.current.wind_direction_10m) }}</div>
-          </div>
-          <div class="weather-card">
-            <div class="icon">{{ getWeatherIcon(weather.current.weather_code) }}</div>
-            <div class="label">Conditions</div>
-            <div class="value">{{ getWeatherDescription(weather.current.weather_code) }}</div>
-          </div>
-        </div>
-      </div>
+      <CurrentWeather
+        :weatherIcon="getWeatherIcon(weather.current.weather_code)"
+        :temperature="Math.round(weather.current.temperature_2m)"
+        :condition="getWeatherDescription(weather.current.weather_code)"
+        :maxTemp="Math.round(weather.daily.temperature_2m_max[0])"
+        :minTemp="Math.round(weather.daily.temperature_2m_min[0])"
+        :humidity="weather.current.relative_humidity_2m"
+        :windSpeed="Math.round(weather.current.wind_speed_10m)"
+        :precipitation="weather.current.precipitation"
+      />
 
-      <div class="forecast">
-        <h2>Prévisions sur 7 jours</h2>
-        <div class="forecast-grid">
-          <div 
-            v-for="(date, index) in weather.daily.time" 
-            :key="index"
-            class="forecast-card"
-          >
-            <div class="forecast-date">{{ formatDate(date) }}</div>
-            <div class="forecast-icon">{{ getWeatherIcon(weather.daily.weather_code[index]) }}</div>
-            <div class="forecast-temps">
-              <span class="temp-max">{{ weather.daily.temperature_2m_max[index] }}°</span>
-              <span class="temp-min">{{ weather.daily.temperature_2m_min[index] }}°</span>
-            </div>
-            <div class="forecast-details">
-              <div>💧 {{ weather.daily.precipitation_sum[index] }} mm</div>
-              <div>💨 {{ weather.daily.wind_speed_10m_max[index] }} km/h</div>
-              <div class="wind-dir">{{ getWindDirection(weather.daily.wind_direction_10m_dominant[index]) }}</div>
-            </div>
-          </div>
-        </div>
+      <div class="section-title">Aujourd'hui</div>
+      <HourlyForecast :hourlyData="hourlyForecastData" />
+
+      <DailyForecast :dailyData="dailyForecastData" />
+    </div>
+
+    <div v-if="showSearchModal" class="modal-overlay" @click="showSearchModal = false">
+      <div class="modal-content" @click.stop>
+        <button @click="showSearchModal = false" class="close-btn">✕</button>
+        <SearchBar @citySelected="onCitySelectedFromModal" />
       </div>
     </div>
   </div>
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue';
+import { ref, computed, onMounted } from 'vue';
 import SearchBar from './SearchBar.vue';
+import CurrentWeather from './CurrentWeather.vue';
+import HourlyForecast from './HourlyForecast.vue';
+import DailyForecast from './DailyForecast.vue';
 
 const emit = defineEmits(['favoriteAdded']);
 
@@ -102,6 +64,8 @@ const currentCity = ref('Dijon');
 const currentLocation = ref({ latitude: 47.3220, longitude: 5.0415 });
 const isFavorite = ref(false);
 const favoriteId = ref(null);
+const showSearchModal = ref(false);
+const isNightTime = ref(false);
 
 const fetchWeather = async (latitude = 47.3220, longitude = 5.0415) => {
   try {
@@ -134,8 +98,43 @@ const formatDate = (dateString) => {
     return 'Demain';
   }
   
-  return date.toLocaleDateString('fr-FR', { weekday: 'short', day: 'numeric', month: 'short' });
+  return date.toLocaleDateString('fr-FR', { weekday: 'long' });
 };
+
+const formatHour = (dateString) => {
+  const date = new Date(dateString);
+  return date.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' });
+};
+
+const checkNightTime = () => {
+  const hour = new Date().getHours();
+  isNightTime.value = hour < 6 || hour >= 17;
+};
+
+const backgroundClass = computed(() => {
+  return isNightTime.value ? 'night-mode' : 'day-mode';
+});
+
+const hourlyForecastData = computed(() => {
+  if (!weather.value || !weather.value.hourly) return [];
+  
+  return weather.value.hourly.time.slice(0, 24).map((time, index) => ({
+    time: formatHour(time),
+    icon: getWeatherIcon(weather.value.hourly.weather_code[index]),
+    temp: Math.round(weather.value.hourly.temperature_2m[index])
+  }));
+});
+
+const dailyForecastData = computed(() => {
+  if (!weather.value || !weather.value.daily) return [];
+  
+  return weather.value.daily.time.slice(1, 7).map((date, index) => ({
+    day: formatDate(date),
+    icon: getWeatherIcon(weather.value.daily.weather_code[index + 1]),
+    maxTemp: Math.round(weather.value.daily.temperature_2m_max[index + 1]),
+    minTemp: Math.round(weather.value.daily.temperature_2m_min[index + 1])
+  }));
+});
 
 const getWindDirection = (degrees) => {
   const directions = ['Nord', 'Nord-Est', 'Est', 'Sud-Est', 'Sud', 'Sud-Ouest', 'Ouest', 'Nord-Ouest'];
@@ -262,9 +261,17 @@ const onCitySelected = (cityData) => {
   checkFavoriteStatus(cityData.latitude, cityData.longitude);
 };
 
+const onCitySelectedFromModal = (cityData) => {
+  onCitySelected(cityData);
+  showSearchModal.value = false;
+};
+
 onMounted(() => {
   fetchWeather();
   checkFavoriteStatus(currentLocation.value.latitude, currentLocation.value.longitude);
+  checkNightTime();
+  
+  setInterval(checkNightTime, 60000);
   
   window.addEventListener('selectCity', (event) => {
     const cityData = event.detail;
@@ -275,24 +282,37 @@ onMounted(() => {
 
 <style scoped>
 .weather-container {
-  max-width: 1200px;
-  margin: 0 auto;
-  padding: 2rem;
+  min-height: 100vh;
+  transition: background 0.5s ease;
+  position: relative;
+  overflow-x: hidden;
+}
+
+.weather-container.day-mode {
+  background: linear-gradient(180deg, #4A90E2 0%, #87CEEB 50%, #B0E0E6 100%);
+}
+
+.weather-container.night-mode {
+  background: linear-gradient(180deg, #0F2027 0%, #203A43 50%, #2C5364 100%);
 }
 
 .loading {
-  text-align: center;
-  padding: 3rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 100vh;
+  color: white;
 }
 
 .spinner {
-  border: 4px solid #f3f3f3;
-  border-top: 4px solid #3498db;
+  border: 4px solid rgba(255, 255, 255, 0.3);
+  border-top: 4px solid white;
   border-radius: 50%;
   width: 50px;
   height: 50px;
   animation: spin 1s linear infinite;
-  margin: 0 auto 1rem;
+  margin-bottom: 1rem;
 }
 
 @keyframes spin {
@@ -301,222 +321,148 @@ onMounted(() => {
 }
 
 .error {
-  background: #fee;
-  border: 1px solid #fcc;
-  border-radius: 8px;
-  padding: 1rem;
-  text-align: center;
-  color: #c00;
-}
-
-.header {
-  text-align: center;
-  margin-bottom: 2rem;
-}
-
-.header h1 {
-  font-size: 2.5rem;
-  margin: 0 0 1.5rem 0;
-  color: #2c3e50;
-}
-
-.location-info {
-  text-align: center;
-  margin-bottom: 2rem;
-  padding: 1.5rem;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  border-radius: 16px;
-  color: white;
-}
-
-.location-header {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  gap: 1.5rem;
-  flex-wrap: wrap;
-}
-
-.location-info h2 {
-  font-size: 2rem;
-  margin: 0;
-  font-weight: bold;
-}
-
-.favorite-btn {
   background: rgba(255, 255, 255, 0.2);
+  backdrop-filter: blur(10px);
+  border-radius: 16px;
+  padding: 2rem;
+  margin: 2rem;
+  text-align: center;
   color: white;
-  border: 2px solid rgba(255, 255, 255, 0.3);
-  padding: 0.6rem 1.2rem;
-  border-radius: 25px;
-  font-size: 0.95rem;
+  font-size: 1.1rem;
+}
+
+.weather-content {
+  max-width: 500px;
+  margin: 0 auto;
+  padding: 1rem;
+  padding-bottom: 2rem;
+}
+
+.top-bar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1.5rem 1rem;
+  color: white;
+}
+
+.location {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  cursor: pointer;
+  transition: opacity 0.2s;
+}
+
+.location:hover {
+  opacity: 0.8;
+}
+
+.location-icon {
+  font-size: 1.25rem;
+}
+
+.location-name {
+  font-size: 1.1rem;
   font-weight: 600;
+}
+
+.dropdown-icon {
+  font-size: 0.7rem;
+  opacity: 0.7;
+}
+
+.search-btn {
+  background: rgba(255, 255, 255, 0.2);
+  border: none;
+  border-radius: 50%;
+  width: 45px;
+  height: 45px;
+  font-size: 1.25rem;
   cursor: pointer;
   transition: all 0.3s;
   display: flex;
   align-items: center;
-  gap: 0.5rem;
-}
-
-.favorite-btn:hover {
-  background: rgba(255, 255, 255, 0.3);
-  border-color: rgba(255, 255, 255, 0.5);
-  transform: translateY(-2px);
-}
-
-.favorite-btn.active {
-  background: rgba(255, 215, 0, 0.3);
-  border-color: rgba(255, 215, 0, 0.6);
-}
-
-.favorite-btn.active:hover {
-  background: rgba(255, 215, 0, 0.4);
-}
-
-.update-time {
-  color: rgba(255, 255, 255, 0.9);
-  font-size: 0.9rem;
-  margin-top: 0.5rem;
-}
-
-.current-weather {
-  margin-bottom: 3rem;
-}
-
-.current-weather h2 {
-  font-size: 1.5rem;
-  margin-bottom: 1rem;
-  color: #34495e;
-}
-
-.current-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-  gap: 1rem;
-}
-
-.weather-card {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  color: white;
-  padding: 1.5rem;
-  border-radius: 12px;
-  text-align: center;
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-  transition: transform 0.2s;
-}
-
-.weather-card:hover {
-  transform: translateY(-5px);
-}
-
-.weather-card .icon {
-  font-size: 2.5rem;
-  margin-bottom: 0.5rem;
-}
-
-.weather-card .label {
-  font-size: 0.9rem;
-  opacity: 0.9;
-  margin-bottom: 0.5rem;
-}
-
-.weather-card .value {
-  font-size: 1.8rem;
-  font-weight: bold;
-}
-
-.weather-card .sub-value {
-  font-size: 1rem;
-  margin-top: 0.3rem;
-  opacity: 0.9;
-}
-
-.forecast h2 {
-  font-size: 1.5rem;
-  margin-bottom: 1rem;
-  color: #34495e;
-}
-
-.forecast-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
-  gap: 1rem;
-}
-
-.forecast-card {
-  background: white;
-  border: 1px solid #e0e0e0;
-  border-radius: 12px;
-  padding: 1rem;
-  text-align: center;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
-  transition: all 0.2s;
-}
-
-.forecast-card:hover {
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-  transform: translateY(-2px);
-}
-
-.forecast-date {
-  font-weight: bold;
-  color: #2c3e50;
-  margin-bottom: 0.5rem;
-  font-size: 0.9rem;
-}
-
-.forecast-icon {
-  font-size: 2.5rem;
-  margin: 0.5rem 0;
-}
-
-.forecast-temps {
-  display: flex;
   justify-content: center;
-  gap: 1rem;
-  margin: 0.5rem 0;
-  font-size: 1.2rem;
+  backdrop-filter: blur(10px);
 }
 
-.temp-max {
-  color: #e74c3c;
-  font-weight: bold;
+.search-btn:hover {
+  background: rgba(255, 255, 255, 0.3);
+  transform: scale(1.05);
 }
 
-.temp-min {
-  color: #3498db;
+.section-title {
+  color: white;
+  font-size: 1rem;
+  font-weight: 600;
+  padding: 0 1rem;
+  margin-top: 1.5rem;
+  margin-bottom: 0.5rem;
+  opacity: 0.9;
 }
 
-.forecast-details {
-  font-size: 0.85rem;
-  color: #7f8c8d;
-  margin-top: 0.5rem;
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.7);
+  backdrop-filter: blur(5px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  padding: 1rem;
 }
 
-.forecast-details > div {
-  margin: 0.2rem 0;
+.modal-content {
+  background: white;
+  border-radius: 24px;
+  padding: 2rem;
+  width: 100%;
+  max-width: 500px;
+  position: relative;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
 }
 
-.wind-dir {
-  font-weight: bold;
-  color: #95a5a6;
+.close-btn {
+  position: absolute;
+  top: 1rem;
+  right: 1rem;
+  background: rgba(0, 0, 0, 0.05);
+  border: none;
+  border-radius: 50%;
+  width: 35px;
+  height: 35px;
+  font-size: 1.25rem;
+  cursor: pointer;
+  transition: all 0.2s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #666;
+}
+
+.close-btn:hover {
+  background: rgba(0, 0, 0, 0.1);
+  transform: rotate(90deg);
 }
 
 @media (max-width: 768px) {
-  .weather-container {
-    padding: 1rem;
+  .weather-content {
+    padding: 4rem;
+    max-width: 100%;
   }
-  
-  .header h1 {
-    font-size: 2rem;
+
+  .top-bar {
+    padding: 1rem 0.5rem;
   }
-  
-  .current-grid {
-    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
-  }
-  
-  .forecast-grid {
-    grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+
+  .modal-content {
+    padding: 1.5rem;
+    max-width: 100%;
   }
 }
 </style>
