@@ -236,7 +236,7 @@ const getWeatherDescription = (code) => {
 };
 
 const getWindDirection = (degrees) => {
-  const directions = ['N', 'NE', 'E', 'SE', 'S', 'SO', 'O', 'NO'];
+  const directions = ['Nord', 'Nord-Est', 'Est', 'Sud-Est', 'Sud', 'Sud-Ouest', 'Ouest', 'Nord-Ouest'];
   const index = Math.round(degrees / 45) % 8;
   return directions[index];
 };

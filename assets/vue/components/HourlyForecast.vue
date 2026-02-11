@@ -1,15 +1,10 @@
 <template>
   <div class="hourly-forecast">
     <div class="forecast-scroll">
-      <div 
-        v-for="(hour, index) in hourlyData" 
-        :key="index"
-        class="hour-card"
-        :class="{ 'current': index === 0 }"
-      >
+      <div v-for="(hour, index) in hourlyData" :key="index" class="hour-card" :class="{ 'current': index === 0 }">
         <div class="hour-time">{{ hour.time }}</div>
         <div class="hour-icon">{{ hour.icon }}</div>
-        <div class="hour-precipitation" v-if="hour.precipitation > 0">{{ hour.precipitation }}%</div>
+        <div class="hour-precipitation">{{ hour.precipitation }}%</div>
         <div class="hour-temp">{{ hour.temp }}°</div>
       </div>
     </div>
@@ -59,8 +54,13 @@ defineProps({
   border: 1px solid rgba(255, 255, 255, 0.3);
 }
 
+.day-mode .hour-card {
+  background: rgb(57 130 163 / 36%);
+}
+
 .hour-card.current {
-  background: rgba(255, 255, 255, 0.35);
+  background: rgb(57 130 163 / 36%);
+  ;
   border-color: rgba(255, 255, 255, 0.5);
   transform: scale(1.05);
 }
@@ -79,7 +79,7 @@ defineProps({
 
 .hour-precipitation {
   font-size: 0.85rem;
-  color: #5AC8FA;
+  color: #94ddff;
   font-weight: 500;
   margin: 0.25rem 0;
 }

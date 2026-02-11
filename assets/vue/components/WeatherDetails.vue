@@ -146,6 +146,10 @@ const getHumidityDescription = (humidity) => {
   color: white;
 }
 
+.day-mode .detail-card {
+  background: rgb(57 130 163 / 36%)
+}
+
 .detail-header {
   display: flex;
   align-items: center;
