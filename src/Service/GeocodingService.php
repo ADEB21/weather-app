@@ -19,7 +19,7 @@ class GeocodingService
     private const API_URL = 'https://geocoding-api.open-meteo.com/v1/search';
     
     /** @var int Nombre maximum de résultats retournés */
-    private const MAX_RESULTS = 10;
+    private const MAX_RESULTS = 3;
     
     /** @var string Langue des résultats */
     private const LANGUAGE = 'fr';
