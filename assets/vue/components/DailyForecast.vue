@@ -53,6 +53,10 @@ const getTempBarStyle = (min, max) => {
   color: white;
 }
 
+.day-mode .daily-forecast {
+  background: rgb(57 130 163 / 36%)
+}
+
 .forecast-header {
   display: flex;
   justify-content: space-between;
@@ -104,7 +108,7 @@ const getTempBarStyle = (min, max) => {
 
 .day-precipitation {
   font-size: 0.85rem;
-  color: #5AC8FA;
+  color: #94ddff;
   font-weight: 500;
 }
 
@@ -136,6 +140,10 @@ const getTempBarStyle = (min, max) => {
   background: rgba(255, 255, 255, 0.2);
   border-radius: 2px;
   position: relative;
+}
+
+.day-mode .hour-card {
+  background: rgba(255, 255, 255, 0.1);
 }
 
 .temp-bar-fill {
