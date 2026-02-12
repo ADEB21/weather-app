@@ -1,5 +1,5 @@
 <template>
-  <div class="weather-page" :class="backgroundClass">
+  <div class="weather-page">
     <div v-if="loading" class="loading">
       <div class="spinner"></div>
       <p>Chargement...</p>
@@ -86,7 +86,6 @@ const emit = defineEmits(['addFavorite', 'removeFavorite']);
 const weather = ref(null);
 const loading = ref(true);
 const error = ref(null);
-const isNightTime = ref(false);
 const showSearch = ref(false);
 const isFavorite = ref(false);
 const favoriteId = ref(null);
@@ -112,15 +111,6 @@ const fetchWeather = async (latitude, longitude) => {
     loading.value = false;
   }
 };
-
-const checkNightTime = () => {
-  const hour = new Date().getHours();
-  isNightTime.value = hour < 6 || hour >= 17;
-};
-
-const backgroundClass = computed(() => {
-  return isNightTime.value ? 'night-mode' : 'day-mode';
-});
 
 const formatHour = (dateString) => {
   const date = new Date(dateString);
@@ -328,27 +318,16 @@ onMounted(() => {
     fetchWeather();
   }
   checkFavoriteStatus();
-  checkNightTime();
-  setInterval(checkNightTime, 60000);
 });
 </script>
 
 <style scoped>
 .weather-page {
   min-height: 100vh;
-  transition: background 0.5s ease;
   position: relative;
   overflow-y: auto;
   overflow-x: hidden;
   height: 100%;
-}
-
-.weather-page.day-mode {
-  background: linear-gradient(180deg, #4A90E2 0%, #87CEEB 50%, #B0E0E6 100%);
-}
-
-.weather-page.night-mode {
-  background: linear-gradient(180deg, #0F2027 0%, #203A43 50%, #2C5364 100%);
 }
 
 .loading {
