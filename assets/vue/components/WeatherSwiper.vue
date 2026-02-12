@@ -1,38 +1,17 @@
 <template>
-  <div class="weather-swiper">
-    <div 
-      class="swiper-container"
-      @touchstart="handleTouchStart"
-      @touchmove="handleTouchMove"
-      @touchend="handleTouchEnd"
-      @mousedown="handleMouseDown"
-      @mousemove="handleMouseMove"
-      @mouseup="handleMouseUp"
-      @mouseleave="handleMouseUp"
-      :style="{ transform: `translateX(${translateX}px)` }"
-    >
-      <div 
-        v-for="(location, index) in locations" 
-        :key="location.id"
-        class="swiper-slide"
-      >
-        <WeatherPage 
-          :location="location"
-          :isActive="currentIndex === index"
-          @addFavorite="$emit('addFavorite', $event)"
-          @removeFavorite="$emit('removeFavorite', $event)"
-        />
+  <div :class="'weather-swiper ' + backgroundClass">
+    <div class="swiper-container" @touchstart="handleTouchStart" @touchmove="handleTouchMove" @touchend="handleTouchEnd"
+      @mousedown="handleMouseDown" @mousemove="handleMouseMove" @mouseup="handleMouseUp" @mouseleave="handleMouseUp"
+      :style="{ transform: `translateX(${translateX}px)` }">
+      <div v-for="(location, index) in locations" :key="location.id" class="swiper-slide">
+        <WeatherPage :location="location" :isActive="currentIndex === index" @addFavorite="$emit('addFavorite', $event)"
+          @removeFavorite="$emit('removeFavorite', $event)" />
       </div>
     </div>
 
     <div class="page-indicators">
-      <div 
-        v-for="(location, index) in locations" 
-        :key="`indicator-${index}`"
-        class="indicator"
-        :class="{ active: currentIndex === index }"
-        @click="goToSlide(index)"
-      ></div>
+      <div v-for="(location, index) in locations" :key="`indicator-${index}`" class="indicator"
+        :class="{ active: currentIndex === index }" @click="goToSlide(index)"></div>
     </div>
   </div>
 </template>
@@ -56,6 +35,18 @@ const startX = ref(0);
 const currentX = ref(0);
 const isDragging = ref(false);
 const containerWidth = ref(0);
+const isNightTime = ref(null);
+
+const checkNightTime = () => {
+  const hour = new Date().getHours();
+  isNightTime.value = hour < 6 || hour >= 17;
+};
+
+
+const backgroundClass = computed(() => {
+  console.log("isNightTime", isNightTime.value);
+  return isNightTime.value ? 'night-mode' : 'day-mode';
+});
 
 const handleTouchStart = (e) => {
   if (e.target.closest('button') || e.target.closest('.search-overlay')) {
@@ -128,6 +119,9 @@ onMounted(() => {
     containerWidth.value = document.documentElement.clientWidth;
     translateX.value = -currentIndex.value * containerWidth.value;
   });
+
+  checkNightTime();
+  setInterval(checkNightTime, 60000);
 });
 </script>
 
@@ -138,6 +132,15 @@ onMounted(() => {
   height: 100vh;
   overflow-x: hidden;
   overflow-y: auto;
+  transition: background 0.5s ease;
+}
+
+.weather-swiper.day-mode {
+  background: linear-gradient(180deg, #4A90E2 0%, #87CEEB 50%, #B0E0E6 100%);
+}
+
+.weather-swiper.night-mode {
+  background: linear-gradient(180deg, #0F2027 0%, #203A43 50%, #2C5364 100%);
 }
 
 .swiper-container {
