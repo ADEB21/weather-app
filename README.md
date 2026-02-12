@@ -52,6 +52,14 @@ npm install
 
 ### 4. Créer la base de données
 
+Créer une nouvelle migration (si nécessaire) :
+
+```bash
+php bin/console make:migration
+```
+
+Exécuter les migrations :
+
 ```bash
 php bin/console doctrine:migrations:migrate
 ```
